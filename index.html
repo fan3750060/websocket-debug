@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Socket 调试工具</title>
+    <link rel="stylesheet" type="text/css" href="css/default.css">
+    <link rel="stylesheet" href="css/reset.css">
+    <!-- CSS reset -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Resource style -->
+    <script src="js/modernizr.js"></script>
+    <!-- Modernizr -->
+</head>
+
+<body>
+    <div class="container" style="float: left;width: 40%;border: 1px solid #cfd9db;min-height: 100vh;">
+        <form class="cd-form floating-labels">
+            <fieldset>
+                <legend>Web Socket 调试工具</legend>
+                <div class="error-message">
+                    <p>服务器配置,状态:<span class="connectionstatus">未连接</span></p>
+                </div>
+                <div class="icon">
+                    <label class="cd-label" for="cd-name">服务器地址 如: ws://127.0.0.1:9501</label>
+                    <input class="budget connectvalue" type="text" name="cd-name" id="cd-name" required>
+                    <span class="connect lianjie">连接</span>
+                </div>
+                <div style="clear: both;"></div>
+                <div class="icon">
+                    <label class="cd-label" for="cd-textarea">数据信息</label>
+                    <textarea class="message" name="cd-textarea" id="cd-textarea" required></textarea>
+                </div>
+                <div>
+                    <span class="send">Send</span>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+    <div class="container" style="float: right;width: 60%;border: 1px solid #cfd9db;min-height: 100vh;text-align:left">
+        <form class="cd-form floating-labels" style="margin: 4em 4em;width: 100%;max-width: 100%!important;width:100%!important;">
+            <fieldset>
+                <legend>服务端返回数据</legend>
+                <div>
+                    <ul class="cd-form-list">
+                        <li>
+                            <span class="bnt Clear">Clear</span>
+                        </li>
+                        <li>
+                            <input type="checkbox" id="cd-checkbox-2">
+                            <label for="cd-checkbox-2">Json解析</label>
+                        </li>
+                    </ul>
+                </div>
+                <hr style="border-top: 1px dashed #ccc;">
+                <div style="float: left;border-top:#cfd9db;margin:0px;" id="content">
+                </div>
+            </fieldset>
+        </form>
+    </div>
+    <script src="js/jquery-2.1.1.js"></script>
+    <script src="js/main.js"></script>
+    <!-- Resource jQuery -->
+</body>
+
+</html>
+<script>
+var exampleSocket; //ws
+
+var isconnet = 1; //是否连接
+
+var isselected = 1; //是否选中
+
+//连接
+function connectmsg(url) {
+    exampleSocket = new WebSocket(url);
+
+    //正常连接
+    exampleSocket.onopen = function(event) {
+        getappendmsg('连接成功');
+        openshow();
+        isconnet = 2;
+    };
+
+    exampleSocket.onmessage = function(event) {
+        getappendmsg(event.data);
+    }
+
+    exampleSocket.onclose = function(event) {
+        getappendmsg('连接已经关闭');
+        closeshow();
+        isconnet = 1;
+        exampleSocket.close();
+    };
+}
+
+//连接事件
+$('.connect').click(function() {
+    var url = $('.connectvalue').val();
+    if (!url) return false;
+
+    if (isconnet == 1) {
+        connectmsg(url);
+    } else {
+        exampleSocket.onclose();
+    }
+})
+
+//发送事件
+$('.send').click(function() {
+    var msg = $(".message").val();
+    if (!msg) return false;
+
+    if (isconnet == 2) {
+        goappendmsg(msg);
+        sendmsg(msg);
+    } else {
+        getappendmsg('服务器未连接,请先连接服务器');
+    }
+})
+
+$('.Clear').click(function() {
+    $('#content').empty();
+})
+
+//json选中事件
+$("#cd-checkbox-2").click(function() {
+    if ($(this).is(':checked')) {
+        isselected = 2
+    } else {
+        isselected = 1;
+    }
+});
+
+//发送消息
+function sendmsg(msg) {
+    exampleSocket.send(msg);
+}
+
+//发送信息显示
+function goappendmsg(msg) {
+	if (isselected == 2) {
+        msg = syntaxHighlight(msg);
+    }
+    
+    var content = '<p><p><span style="color: #07b948;">' + getNowFormatDate() + ' Send: </span></p>' + msg + '</p>';
+    $('#content').append(content);
+}
+
+//获取信息显示
+function getappendmsg(msg) {
+    if (isselected == 2) {
+        msg = syntaxHighlight(msg);
+    }
+
+    var content = '<p><p><span style="color: #007c8a;">' + getNowFormatDate() + ' Response: </span></p>' + msg + '</p>';
+    $('#content').append(content);
+}
+
+//连接样式
+function openshow() {
+    //提示样式
+    $('.error-message p').css('background', '#007c8a');
+    $('.connectionstatus').text('已连接');
+
+    $('.connect').css('background', '#007c8a');
+    $('.connect').text('断开');
+
+    $('.send').css('background', '#007c8a');
+    $('.Clear').css('background', '#007c8a');
+}
+
+//断开样式
+function closeshow() {
+    //提示样式
+    $('.error-message p').css('background', '#b50039');
+    $('.connectionstatus').text('断开连接');
+
+    $('.connect').css('background', '#b50039');
+    $('.connect').text('连接');
+
+    $('.send').css('background', '#b50039');
+    $('.Clear').css('background', '#b50039');
+}
+
+//获取日期
+function getNowFormatDate() {
+    var date = new Date();
+    var sign1 = "-";
+    var sign2 = ":";
+    var year = date.getFullYear() // 年
+    var month = date.getMonth() + 1; // 月
+    var day = date.getDate(); // 日
+    var hour = date.getHours(); // 时
+    var minutes = date.getMinutes(); // 分
+    var seconds = date.getSeconds() //秒
+    var weekArr = ['星期一', '星期二', '星期三', '星期四', '星期五', '星期六', '星期天'];
+    var week = weekArr[date.getDay()];
+    // 给一位数数据前面加 “0”
+    if (month >= 1 && month <= 9) {
+        month = "0" + month;
+    }
+    if (day >= 0 && day <= 9) {
+        day = "0" + day;
+    }
+    if (hour >= 0 && hour <= 9) {
+        hour = "0" + hour;
+    }
+    if (minutes >= 0 && minutes <= 9) {
+        minutes = "0" + minutes;
+    }
+    if (seconds >= 0 && seconds <= 9) {
+        seconds = "0" + seconds;
+    }
+    var currentdate = year + sign1 + month + sign1 + day + " " + hour + sign2 + minutes + sign2 + seconds + " " + week;
+    return currentdate;
+}
+
+//json格式化
+function syntaxHighlight(json) {
+
+	if(isJSON(json) == false)
+	{
+		return json;
+	}
+
+    if (typeof json != 'string') {
+        json = JSON.stringify(json, null, "\t");
+    } else {
+        json = eval("(" + json + ")");
+        json = JSON.stringify(json, null, "\t");
+    }
+
+    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return '<pre id="result">' + json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function(match) {
+        var cls = 'number';
+        if (/^"/.test(match)) {
+            if (/:$/.test(match)) {
+                cls = 'key';
+            } else {
+                cls = 'string';
+            }
+        } else if (/true|false/.test(match)) {
+            cls = 'boolean';
+        } else if (/null/.test(match)) {
+            cls = 'null';
+        }
+
+        return '<span class="' + cls + '">' + match + '</span>';
+    }) + '</pre>';
+}
+
+//判断是否为json
+function isJSON(str, pass_object) {
+    if (pass_object && isObject(str)) return true;
+
+    if (typeof str != 'string') {
+        return false;
+    }
+
+    str = str.replace(/\s/g, '').replace(/\n|\r/, '');
+
+    if (/^\{(.*?)\}$/.test(str))
+        return /"(.*?)":(.*?)/g.test(str);
+
+    if (/^\[(.*?)\]$/.test(str)) {
+        return str.replace(/^\[/, '')
+            .replace(/\]$/, '')
+            .replace(/},{/g, '}\n{')
+            .split(/\n/)
+            .map(function(s) { return isJSON(s); })
+            .reduce(function(prev, curr) { return !!curr; });
+    }
+
+    return false;
+}
+</script>
