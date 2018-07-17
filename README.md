@@ -3,9 +3,8 @@
 
 ~~~
 初始页面
-![image](https://pictureblog.oss-cn-beijing.aliyuncs.com/da1b7f3f9fa51cea927de816253fcb7.png)
 ~~~
-
+![image](https://pictureblog.oss-cn-beijing.aliyuncs.com/da1b7f3f9fa51cea927de816253fcb7.png)
 
 ![image](https://pictureblog.oss-cn-beijing.aliyuncs.com/105776bcf216a7afa953ee91fa2582d.png)
  
