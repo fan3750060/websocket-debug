@@ -33,7 +33,7 @@ Form
 .cd-form {
   width: 90%;
   max-width: 480px;
-  margin: 4em 10em;
+  margin:5px auto;
 }
 .cd-form::after {
   clear: both;
